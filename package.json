@@ -24,5 +24,8 @@
     "mongoose": "^9.6.1",
     "swagger-jsdoc": "^6.2.8",
     "swagger-ui-express": "^5.0.1"
+  },
+  "devDependencies": {
+    "markdown-pdf": "^11.0.0"
   }
 }
