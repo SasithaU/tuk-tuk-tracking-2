@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const { API_PREFIX } = require("./src/constants");
 const { sendSuccess } = require("./src/utils/response");
