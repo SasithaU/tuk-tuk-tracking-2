@@ -62,13 +62,14 @@ const lastKnownLocationSchema = new mongoose.Schema(
   },
 );
 
-// TTL index to automatically refresh stale locations after 24 hours
-lastKnownLocationSchema.index(
-  { updatedAt: 1 },
-  {
-    expireAfterSeconds: 24 * 60 * 60, // 24 hours in seconds
-  },
-);
+// Note: TTL index removed so last known locations do not disappear after 24 hours of inactivity.
+// If you wish to expire documents, uncomment this.
+// lastKnownLocationSchema.index(
+//   { updatedAt: 1 },
+//   {
+//     expireAfterSeconds: 24 * 60 * 60, // 24 hours in seconds
+//   },
+// );
 
 // Index for geospatial queries
 lastKnownLocationSchema.index({ latitude: 1, longitude: 1 });
