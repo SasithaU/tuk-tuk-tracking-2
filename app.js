@@ -76,6 +76,12 @@ app.get(`${API_PREFIX}/health`, async (req, res) => {
     {
       status: "healthy",
       database: dbStatus,
+      env: {
+        has_mongodb_uri: !!process.env.MONGODB_URI,
+        has_jwt_secret: !!process.env.JWT_SECRET,
+        node_env: process.env.NODE_ENV,
+        port: process.env.PORT,
+      },
       timestamp: new Date().toISOString(),
     },
     "API health check",
