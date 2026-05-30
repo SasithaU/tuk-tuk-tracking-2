@@ -24,11 +24,30 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // ==================== DATABASE CONNECTION ====================
-connectDB();
+const dbPromise = connectDB();
 
 // ==================== MIDDLEWARE ====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Ensure database is connected before proceeding to route handlers
+app.use(async (req, res, next) => {
+  try {
+    const mongoose = require("mongoose");
+    if (mongoose.connection.readyState !== 1) {
+      await dbPromise; // Wait for the initial connection promise
+      if (mongoose.connection.readyState !== 1) {
+        // If still not connected, try connecting again
+        const { connectDB } = require("./src/config/database");
+        await connectDB();
+      }
+    }
+    next();
+  } catch (error) {
+    console.error("Database connection middleware error:", error);
+    next();
+  }
+});
 
 // Enable CORS for all origins, methods, and headers
 app.use((req, res, next) => {
