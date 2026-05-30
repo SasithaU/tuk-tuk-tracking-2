@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const { API_PREFIX } = require("./src/constants");
 const { sendSuccess } = require("./src/utils/response");
@@ -27,6 +29,17 @@ connectDB();
 // ==================== MIDDLEWARE ====================
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Enable CORS for all origins, methods, and headers
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
 
 // Request logging middleware
 app.use((req, res, next) => {
@@ -63,6 +76,12 @@ app.get(`${API_PREFIX}/health`, async (req, res) => {
     {
       status: "healthy",
       database: dbStatus,
+      env: {
+        has_mongodb_uri: !!process.env.MONGODB_URI,
+        has_jwt_secret: !!process.env.JWT_SECRET,
+        node_env: process.env.NODE_ENV,
+        port: process.env.PORT,
+      },
       timestamp: new Date().toISOString(),
     },
     "API health check",
