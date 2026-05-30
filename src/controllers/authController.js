@@ -116,7 +116,7 @@ const login = async (req, res) => {
       );
     }
 
-    sendError(res, ERROR_CODES.INTERNAL_ERROR, "Login failed");
+    sendError(res, ERROR_CODES.INTERNAL_ERROR, `Login failed: ${error.message}`);
   }
 };
 
