@@ -34,8 +34,14 @@ app.use(express.urlencoded({ extended: true }));
 // responds immediately without waiting for the database connection.
 app.use((req, res, next) => {
   res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  res.header(
+    "Access-Control-Allow-Headers",
+    "Origin, X-Requested-With, Content-Type, Accept, Authorization",
+  );
+  res.header(
+    "Access-Control-Allow-Methods",
+    "GET, POST, PUT, DELETE, OPTIONS, PATCH",
+  );
   if (req.method === "OPTIONS") {
     return res.sendStatus(200);
   }
@@ -155,7 +161,9 @@ if (process.env.NODE_ENV !== "production") {
     console.log(
       `📚 API Documentation: http://localhost:${PORT}${API_PREFIX}/docs`,
     );
-    console.log(`❤️  Health Check: http://localhost:${PORT}${API_PREFIX}/health`);
+    console.log(
+      `❤️  Health Check: http://localhost:${PORT}${API_PREFIX}/health`,
+    );
     console.log(
       `🔐 Authentication: http://localhost:${PORT}${API_PREFIX}/auth/login`,
     );
