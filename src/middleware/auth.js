@@ -4,8 +4,8 @@
  */
 
 const { verifyToken } = require("../controllers/authController");
-const { sendError, STATUS_CODES } = require("../utils/response");
-const { ERROR_CODES } = require("../constants");
+const { sendError } = require("../utils/response");
+const { ERROR_CODES, STATUS_CODES } = require("../constants");
 
 /**
  * Verify JWT Token Middleware

@@ -30,6 +30,18 @@ const dbPromise = connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+// Enable CORS for all origins — must be FIRST so OPTIONS preflight
+// responds immediately without waiting for the database connection.
+app.use((req, res, next) => {
+  res.header("Access-Control-Allow-Origin", "*");
+  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
+  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
+  if (req.method === "OPTIONS") {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // Ensure database is connected before proceeding to route handlers
 app.use(async (req, res, next) => {
   try {
@@ -37,7 +49,6 @@ app.use(async (req, res, next) => {
     if (mongoose.connection.readyState !== 1) {
       await dbPromise; // Wait for the initial connection promise
       if (mongoose.connection.readyState !== 1) {
-        // If still not connected, try connecting again
         const { connectDB } = require("./src/config/database");
         await connectDB();
       }
@@ -47,17 +58,6 @@ app.use(async (req, res, next) => {
     console.error("Database connection middleware error:", error);
     next();
   }
-});
-
-// Enable CORS for all origins, methods, and headers
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept, Authorization");
-  res.header("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS, PATCH");
-  if (req.method === 'OPTIONS') {
-    return res.sendStatus(200);
-  }
-  next();
 });
 
 // Request logging middleware
