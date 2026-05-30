@@ -42,23 +42,28 @@ const handleDuplicateKeyError = (error) => {
  */
 const processError = (res, error, defaultMessage = "An error occurred") => {
   try {
-    console.error("Error details:", {
+    const errorInfo = {
       name: error?.name || "Unknown",
       message: error?.message || "No message",
       code: error?.code || null,
-      stack: error?.stack || "No stack",
-    });
+      constructor: error?.constructor?.name || "Unknown",
+    };
+
+    console.error("❌ ERROR CAUGHT BY ERROR HANDLER:", errorInfo);
+    console.error("📋 Full Error Object:", error);
+    console.error("📚 Error Stack:", error?.stack);
 
     // Mongoose Validation Error
     if (error?.name === "ValidationError") {
       const validationErrors = handleMongooseValidationError(error);
-      console.error("Validation errors:", validationErrors);
+      console.error("✅ Validation errors extracted:", validationErrors);
       return sendValidationError(res, validationErrors);
     }
 
     // Mongoose Duplicate Key Error
     if (error?.code === 11000) {
       const message = handleDuplicateKeyError(error);
+      console.error("✅ Duplicate key error handled:", message);
       return sendError(
         res,
         ERROR_CODES.DUPLICATE_ENTRY,
@@ -69,6 +74,7 @@ const processError = (res, error, defaultMessage = "An error occurred") => {
 
     // Cast Error (invalid ObjectId)
     if (error?.name === "CastError") {
+      console.error("✅ Cast error handled:", error.message);
       return sendError(
         res,
         ERROR_CODES.BAD_REQUEST,
@@ -77,7 +83,22 @@ const processError = (res, error, defaultMessage = "An error occurred") => {
       );
     }
 
+    // Network/Connection Error
+    if (
+      error?.message?.includes("ECONNREFUSED") ||
+      error?.message?.includes("MongoDB")
+    ) {
+      console.error("✅ Database connection error handled");
+      return sendError(
+        res,
+        ERROR_CODES.INTERNAL_ERROR,
+        "Database connection failed. Please check your MongoDB connection string.",
+        STATUS_CODES.INTERNAL_ERROR,
+      );
+    }
+
     // Generic error
+    console.error("✅ Generic error response sent:", defaultMessage);
     return sendError(
       res,
       ERROR_CODES.INTERNAL_ERROR,
@@ -85,7 +106,7 @@ const processError = (res, error, defaultMessage = "An error occurred") => {
       STATUS_CODES.INTERNAL_ERROR,
     );
   } catch (handlerError) {
-    console.error("Error in processError handler:", handlerError);
+    console.error("🔥 ERROR IN ERROR HANDLER ITSELF:", handlerError);
     // Fallback error response
     return sendError(
       res,

@@ -114,7 +114,7 @@ const login = async (req, res) => {
         STATUS_CODES.UNAUTHORIZED,
       );
     }
-    
+
     return processError(res, error, "Login failed");
   }
 };
@@ -126,10 +126,9 @@ const logout = async (req, res) => {
     // by removing the token from client storage
     // Optionally, you could implement a token blacklist here
 
-    sendSuccess(res, null, "Logout successful");
+    return sendSuccess(res, null, "Logout successful");
   } catch (error) {
-    console.error("Logout error:", error.message);
-    sendError(res, ERROR_CODES.INTERNAL_ERROR, "Logout failed");
+    return processError(res, error, "Logout failed");
   }
 };
 
@@ -184,9 +183,9 @@ const refreshToken = async (req, res) => {
       "Token refreshed successfully",
     );
   } catch (error) {
-    console.error("Token refresh error:", error.message);
-    sendError(
-    return processError(res, error, "Invalid refresh token"
+    return processError(res, error, "Invalid refresh token");
+  }
+};
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -206,15 +205,15 @@ const getProfile = async (req, res) => {
       );
     }
 
-    sendSuccess(res, user, "Profile retrieved successfully");
+    return sendSuccess(res, user, "Profile retrieved successfully");
   } catch (error) {
-    console.error("Get profile error:", error.message);
-    sendError(res, ERROR_CODES.INTERNAL_ERROR, "Failed to retrieve profile");
+    return processError(res, error, "Failed to retrieve profile");
   }
 };
 
 // Change password
-consreturn processError(res, error
+const changePassword = async (req, res) => {
+  try {
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
@@ -261,16 +260,16 @@ consreturn processError(res, error
     user.passwordHash = newPassword;
     await user.save();
 
-    sendSuccess(res, null, "Password changed successfully");
+    return sendSuccess(res, null, "Password changed successfully");
   } catch (error) {
-    console.error("Change password error:", error.message);
-    sendError(res, ERROR_CODES.INTERNAL_ERROR, "Failed to change password");
+    return processError(res, error, "Failed to change password");
   }
 };
 
 module.exports = {
   login,
-  loreturn processError(res, error
+  logout,
+  refreshToken,
   getProfile,
   changePassword,
   generateToken,

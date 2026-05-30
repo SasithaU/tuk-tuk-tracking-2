@@ -91,16 +91,26 @@ app.get("/", (req, res) => {
   );
 });
 
-// API v1 routes (to be implemented)
+// Health check / database diagnostics
 app.get(`${API_PREFIX}/health`, async (req, res) => {
-  const { healthCheck } = require("./src/config/database");
-  const dbStatus = await healthCheck();
+  try {
+    const mongoose = require("mongoose");
+    const dbConnected = mongoose.connection.readyState === 1;
 
-  sendSuccess(
-    res,
-    {
+    console.log("🏥 Health check requested");
+    console.log(
+      "📊 DB Connection State:",
+      mongoose.connection.readyState,
+      dbConnected ? "(Connected)" : "(Disconnected)",
+    );
+    console.log(
+      "🔌 Connection URI:",
+      process.env.MONGODB_URI?.substring(0, 50) + "...",
+    );
+
+    const response = {
       status: "healthy",
-      database: dbStatus,
+      database: dbConnected ? "connected" : "disconnected",
       env: {
         has_mongodb_uri: !!process.env.MONGODB_URI,
         has_jwt_secret: !!process.env.JWT_SECRET,
@@ -108,9 +118,38 @@ app.get(`${API_PREFIX}/health`, async (req, res) => {
         port: process.env.PORT,
       },
       timestamp: new Date().toISOString(),
-    },
-    "API health check",
-  );
+      connectionState: {
+        0: "disconnected",
+        1: "connected",
+        2: "connecting",
+        3: "disconnecting",
+      }[mongoose.connection.readyState],
+    };
+
+    // Try to ping the database
+    if (dbConnected) {
+      try {
+        const admin = mongoose.connection.db.admin();
+        const pingResult = await admin.ping();
+        response.ping = pingResult;
+        console.log("✅ Database ping successful");
+      } catch (pingError) {
+        console.error("❌ Database ping failed:", pingError.message);
+        response.ping_error = pingError.message;
+      }
+    }
+
+    return sendSuccess(res, response, "Health check complete");
+  } catch (error) {
+    console.error("❌ Health check error:", error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: "HEALTH_CHECK_FAILED",
+        message: error.message,
+      },
+    });
+  }
 });
 
 // Authentication routes (no auth required for login/refresh)
@@ -136,6 +175,67 @@ app.use(`${API_PREFIX}/drivers`, verifyTokenMiddleware, driverRoutes);
 
 // Location tracking routes (require authentication)
 app.use(`${API_PREFIX}/locations`, verifyTokenMiddleware, locationRoutes);
+
+// Global error handler middleware
+app.use((err, req, res, next) => {
+  console.error("🚨 GLOBAL ERROR HANDLER:", {
+    message: err.message,
+    code: err.code,
+    name: err.name,
+    stack: err.stack,
+    path: req.path,
+    method: req.method,
+  });
+
+  // Handle Mongoose validation errors
+  if (err.name === "ValidationError") {
+    const errors = {};
+    Object.keys(err.errors).forEach((field) => {
+      errors[field] = err.errors[field].message;
+    });
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "VALIDATION_ERROR",
+        message: "Validation failed",
+        details: errors,
+      },
+    });
+  }
+
+  // Handle duplicate key errors
+  if (err.code === 11000) {
+    const field = Object.keys(err.keyValue)[0];
+    const value = err.keyValue[field];
+    return res.status(409).json({
+      success: false,
+      error: {
+        code: "DUPLICATE_ENTRY",
+        message: `A record with this ${field} (${value}) already exists`,
+      },
+    });
+  }
+
+  // Handle CastError
+  if (err.name === "CastError") {
+    return res.status(400).json({
+      success: false,
+      error: {
+        code: "BAD_REQUEST",
+        message: `Invalid ${err.kind}: ${err.value}`,
+      },
+    });
+  }
+
+  // Default error response
+  res.status(500).json({
+    success: false,
+    error: {
+      code: "INTERNAL_ERROR",
+      message: err.message || "An internal server error occurred",
+    },
+  });
+});
 
 // 404 handler
 app.use((req, res) => {
