@@ -2,6 +2,7 @@ const Vehicle = require("../models/Vehicle");
 const Driver = require("../models/Driver");
 const { sendSuccess, sendError } = require("../utils/response");
 const { ERROR_CODES, STATUS_CODES } = require("../constants");
+const { processError } = require("../utils/errorHandler");
 
 const listVehicles = async (req, res) => {
   try {
@@ -124,22 +125,7 @@ const createVehicle = async (req, res) => {
       STATUS_CODES.CREATED,
     );
   } catch (error) {
-    console.error("createVehicle error:", error.message);
-
-    if (error.code === 11000) {
-      return sendError(
-        res,
-        ERROR_CODES.BAD_REQUEST,
-        "Vehicle with this registration number or device ID already exists",
-        STATUS_CODES.BAD_REQUEST,
-      );
-    }
-
-    return sendError(
-      res,
-      ERROR_CODES.INTERNAL_ERROR,
-      "Unable to create vehicle",
-    );
+    return processError(res, error, "Unable to create vehicle");
   }
 };
 
@@ -207,22 +193,7 @@ const updateVehicle = async (req, res) => {
 
     return sendSuccess(res, vehicle, "Vehicle updated successfully");
   } catch (error) {
-    console.error("updateVehicle error:", error.message);
-
-    if (error.code === 11000) {
-      return sendError(
-        res,
-        ERROR_CODES.BAD_REQUEST,
-        "Vehicle with this registration number or device ID already exists",
-        STATUS_CODES.BAD_REQUEST,
-      );
-    }
-
-    return sendError(
-      res,
-      ERROR_CODES.INTERNAL_ERROR,
-      "Unable to update vehicle",
-    );
+    return processError(res, error, "Unable to update vehicle");
   }
 };
 

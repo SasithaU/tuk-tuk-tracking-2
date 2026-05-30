@@ -3,6 +3,7 @@ const LastKnownLocation = require("../models/LastKnownLocation");
 const Vehicle = require("../models/Vehicle");
 const { sendSuccess, sendError } = require("../utils/response");
 const { ERROR_CODES, STATUS_CODES } = require("../constants");
+const { processError } = require("../utils/errorHandler");
 
 const submitLocationPing = async (req, res) => {
   try {
@@ -83,12 +84,7 @@ const submitLocationPing = async (req, res) => {
       STATUS_CODES.CREATED,
     );
   } catch (error) {
-    console.error("submitLocationPing error:", error.message);
-    return sendError(
-      res,
-      ERROR_CODES.INTERNAL_ERROR,
-      `Unable to submit location ping: ${error.message}`,
-    );
+    return processError(res, error, "Unable to submit location ping");
   }
 };
 

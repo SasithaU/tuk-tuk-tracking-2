@@ -2,6 +2,7 @@ const Driver = require("../models/Driver");
 const Vehicle = require("../models/Vehicle");
 const { sendSuccess, sendError } = require("../utils/response");
 const { ERROR_CODES, STATUS_CODES } = require("../constants");
+const { processError } = require("../utils/errorHandler");
 
 const listDrivers = async (req, res) => {
   try {
@@ -130,22 +131,7 @@ const createDriver = async (req, res) => {
       STATUS_CODES.CREATED,
     );
   } catch (error) {
-    console.error("createDriver error:", error.message);
-
-    if (error.code === 11000) {
-      return sendError(
-        res,
-        ERROR_CODES.BAD_REQUEST,
-        "Driver with this license number already exists",
-        STATUS_CODES.BAD_REQUEST,
-      );
-    }
-
-    return sendError(
-      res,
-      ERROR_CODES.INTERNAL_ERROR,
-      "Unable to create driver",
-    );
+    return processError(res, error, "Unable to create driver");
   }
 };
 
@@ -217,22 +203,7 @@ const updateDriver = async (req, res) => {
 
     return sendSuccess(res, driver, "Driver updated successfully");
   } catch (error) {
-    console.error("updateDriver error:", error.message);
-
-    if (error.code === 11000) {
-      return sendError(
-        res,
-        ERROR_CODES.BAD_REQUEST,
-        "Driver with this license number already exists",
-        STATUS_CODES.BAD_REQUEST,
-      );
-    }
-
-    return sendError(
-      res,
-      ERROR_CODES.INTERNAL_ERROR,
-      "Unable to update driver",
-    );
+    return processError(res, error, "Unable to update driver");
   }
 };
 

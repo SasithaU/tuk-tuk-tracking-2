@@ -7,6 +7,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const { sendSuccess, sendError } = require("../utils/response");
 const { ERROR_CODES, STATUS_CODES } = require("../constants");
+const { processError } = require("../utils/errorHandler");
 
 // Generate JWT token
 const generateToken = (userId, role) => {
@@ -105,8 +106,6 @@ const login = async (req, res) => {
       "Login successful",
     );
   } catch (error) {
-    console.error("Login error:", error.message);
-
     if (error.message === "Invalid login credentials") {
       return sendError(
         res,
@@ -115,8 +114,8 @@ const login = async (req, res) => {
         STATUS_CODES.UNAUTHORIZED,
       );
     }
-
-    sendError(res, ERROR_CODES.INTERNAL_ERROR, `Login failed: ${error.message}`);
+    
+    return processError(res, error, "Login failed");
   }
 };
 
@@ -187,13 +186,7 @@ const refreshToken = async (req, res) => {
   } catch (error) {
     console.error("Token refresh error:", error.message);
     sendError(
-      res,
-      ERROR_CODES.INVALID_TOKEN,
-      "Invalid refresh token",
-      STATUS_CODES.UNAUTHORIZED,
-    );
-  }
-};
+    return processError(res, error, "Invalid refresh token"
 
 // Get current user profile
 const getProfile = async (req, res) => {
@@ -221,8 +214,7 @@ const getProfile = async (req, res) => {
 };
 
 // Change password
-const changePassword = async (req, res) => {
-  try {
+consreturn processError(res, error
     const { currentPassword, newPassword } = req.body;
 
     if (!currentPassword || !newPassword) {
@@ -278,8 +270,7 @@ const changePassword = async (req, res) => {
 
 module.exports = {
   login,
-  logout,
-  refreshToken,
+  loreturn processError(res, error
   getProfile,
   changePassword,
   generateToken,
