@@ -25,58 +25,75 @@ const handleMongooseValidationError = (error) => {
  * Handle duplicate key errors
  */
 const handleDuplicateKeyError = (error) => {
-  const field = Object.keys(error.keyValue)[0];
-  const value = error.keyValue[field];
-
-  return `A record with this ${field} (${value}) already exists`;
+  try {
+    if (error.keyValue && Object.keys(error.keyValue).length > 0) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+      return `A record with this ${field} (${value}) already exists`;
+    }
+  } catch (e) {
+    console.error("Error handling duplicate key:", e);
+  }
+  return "A record with these values already exists";
 };
 
 /**
  * Process and send error response
  */
 const processError = (res, error, defaultMessage = "An error occurred") => {
-  console.error("Error details:", {
-    name: error.name,
-    message: error.message,
-    code: error.code,
-    stack: error.stack,
-  });
+  try {
+    console.error("Error details:", {
+      name: error?.name || "Unknown",
+      message: error?.message || "No message",
+      code: error?.code || null,
+      stack: error?.stack || "No stack",
+    });
 
-  // Mongoose Validation Error
-  if (error.name === "ValidationError") {
-    const validationErrors = handleMongooseValidationError(error);
-    console.error("Validation errors:", validationErrors);
-    return sendValidationError(res, validationErrors);
-  }
+    // Mongoose Validation Error
+    if (error?.name === "ValidationError") {
+      const validationErrors = handleMongooseValidationError(error);
+      console.error("Validation errors:", validationErrors);
+      return sendValidationError(res, validationErrors);
+    }
 
-  // Mongoose Duplicate Key Error
-  if (error.code === 11000) {
-    const message = handleDuplicateKeyError(error);
+    // Mongoose Duplicate Key Error
+    if (error?.code === 11000) {
+      const message = handleDuplicateKeyError(error);
+      return sendError(
+        res,
+        ERROR_CODES.DUPLICATE_ENTRY,
+        message,
+        STATUS_CODES.CONFLICT,
+      );
+    }
+
+    // Cast Error (invalid ObjectId)
+    if (error?.name === "CastError") {
+      return sendError(
+        res,
+        ERROR_CODES.BAD_REQUEST,
+        `Invalid ${error.kind}: ${error.value}`,
+        STATUS_CODES.BAD_REQUEST,
+      );
+    }
+
+    // Generic error
     return sendError(
       res,
-      ERROR_CODES.DUPLICATE_ENTRY,
-      message,
-      STATUS_CODES.CONFLICT,
+      ERROR_CODES.INTERNAL_ERROR,
+      defaultMessage,
+      STATUS_CODES.INTERNAL_ERROR,
     );
-  }
-
-  // Cast Error (invalid ObjectId)
-  if (error.name === "CastError") {
+  } catch (handlerError) {
+    console.error("Error in processError handler:", handlerError);
+    // Fallback error response
     return sendError(
       res,
-      ERROR_CODES.BAD_REQUEST,
-      `Invalid ${error.kind}: ${error.value}`,
-      STATUS_CODES.BAD_REQUEST,
+      ERROR_CODES.INTERNAL_ERROR,
+      defaultMessage,
+      STATUS_CODES.INTERNAL_ERROR,
     );
   }
-
-  // Generic error
-  return sendError(
-    res,
-    ERROR_CODES.INTERNAL_ERROR,
-    defaultMessage,
-    STATUS_CODES.INTERNAL_ERROR,
-  );
 };
 
 module.exports = {

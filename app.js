@@ -146,18 +146,21 @@ app.use((req, res) => {
 });
 
 // ==================== START SERVER ====================
-app.listen(PORT, () => {
-  console.log(`\n${"=".repeat(50)}`);
-  console.log(`🚗 Tuk-Tuk Tracking API Server`);
-  console.log(`📍 Running on: http://localhost:${PORT}`);
-  console.log(
-    `📚 API Documentation: http://localhost:${PORT}${API_PREFIX}/docs`,
-  );
-  console.log(`❤️  Health Check: http://localhost:${PORT}${API_PREFIX}/health`);
-  console.log(
-    `🔐 Authentication: http://localhost:${PORT}${API_PREFIX}/auth/login`,
-  );
-  console.log(`${"=".repeat(50)}\n`);
-});
+// Only start the server locally, not on Vercel
+if (process.env.NODE_ENV !== "production") {
+  app.listen(PORT, () => {
+    console.log(`\n${"=".repeat(50)}`);
+    console.log(`🚗 Tuk-Tuk Tracking API Server`);
+    console.log(`📍 Running on: http://localhost:${PORT}`);
+    console.log(
+      `📚 API Documentation: http://localhost:${PORT}${API_PREFIX}/docs`,
+    );
+    console.log(`❤️  Health Check: http://localhost:${PORT}${API_PREFIX}/health`);
+    console.log(
+      `🔐 Authentication: http://localhost:${PORT}${API_PREFIX}/auth/login`,
+    );
+    console.log(`${"=".repeat(50)}\n`);
+  });
+}
 
 module.exports = app;
